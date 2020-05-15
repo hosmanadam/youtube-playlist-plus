@@ -18,7 +18,7 @@
 
     // OPTIONS ////////////////////////////////////////////////////////////////
 
-    const DEBUG = false; // Set to 'true' to print everything to the console
+    const DEBUG = false; // Set to 'true' to permanently enable console logging
     const CLICKS_PER_SECOND = 5; // Experiment with faster speeds if you want
     const KEEP_THE_LAST = 0; // Set this number to keep the last N videos
 
@@ -93,7 +93,7 @@
 
     const logged = (fun) => {
         return (...args) => {
-            if (DEBUG) {
+            if (window.ypp.debug) {
                 return tryCallWithLogging(fun, args);
             } else {
                 return fun(...args);
@@ -394,6 +394,7 @@
         || onOldPlaylistPage() && addRemoveButtonIfNotPresent();
     })()
 
+    window.ypp = {debug: DEBUG};
     window.addEventListener('load', init);
     window.addEventListener('yt-navigate-finish', init);
 
