@@ -393,24 +393,22 @@
     })()
 
 
-    // GLOBAL YPP OBJECT //////////////////////////////////////////////////////
+    // GLOBAL OBJECT //////////////////////////////////////////////////////////
 
-    const warnGlobalNameTaken = () => logged(function warnGlobalNameTaken() {
+    const warnGlobalNameTaken = (name) => logged(function warnGlobalNameTaken() {
         LOG.warn(
-            `Could not add '${SCRIPT_NAME_SAFE_SHORT}' property to ` +
-            `'window' object: name already taken`
+            `Could not add '${name}' property to 'window' object: ` +
+            `name already taken`
         );
     })()
 
-    const addGlobalObject = () => logged(function addGlobalObject() {
-        window[SCRIPT_NAME_SAFE_SHORT] = {debug: DEBUG};
-    })()
+    const addGlobalObject = (key, value) => logged(function addGlobalObject(key, value) {
+        window[key] = value;
+    })(key, value)
 
-    const safeAddGlobalObject = () => logged(function safeAddGlobalObject() {
-        window[SCRIPT_NAME_SAFE_SHORT]
-        && warnGlobalNameTaken()
-        || addGlobalObject();
-    })()
+    const safeAddGlobalObject = (key, value) => logged(function safeAddGlobalObject(key, value) {
+        window[key] && warnGlobalNameTaken(key) || addGlobalObject(key, value);
+    })(key, value)
 
 
     // MAIN ///////////////////////////////////////////////////////////////////
@@ -420,7 +418,7 @@
         || onOldPlaylistPage() && addRemoveButtonIfNotPresent();
     })()
 
-    safeAddGlobalObject();
+    safeAddGlobalObject(SCRIPT_NAME_SAFE_SHORT, {debug: DEBUG});
     window.addEventListener('load', init);
     window.addEventListener('yt-navigate-finish', init);
 
