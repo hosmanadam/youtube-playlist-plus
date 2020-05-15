@@ -72,6 +72,10 @@
         console.log(`[${SCRIPT_NAME_SAFE}] INFO - ${msg}`);
     }
 
+    const warn = (msg) => {
+        console.warn(`[${SCRIPT_NAME_SAFE}] WARNING - ${msg}`);
+    }
+
     const err = (ex) => {
         console.error(`[${SCRIPT_NAME_SAFE}] ERROR - ${ex}`);
     }
@@ -93,7 +97,7 @@
 
     const logged = (fun) => {
         return (...args) => {
-            if (window.ypp.debug) {
+            if (window.ypp && window.ypp.debug) {
                 return tryCallWithLogging(fun, args);
             } else {
                 return fun(...args);
@@ -394,7 +398,15 @@
         || onOldPlaylistPage() && addRemoveButtonIfNotPresent();
     })()
 
-    window.ypp = {debug: DEBUG};
+    const safeAddYppToWindow = () => logged(function safeAddGlobalYppToWindow() {
+        if (window.ypp) {
+            warn("Could not add 'ypp' property to 'window' object: name already taken");
+        } else {
+            window.ypp = {debug: DEBUG};
+        }
+    })()
+
+    safeAddYppToWindow();
     window.addEventListener('load', init);
     window.addEventListener('yt-navigate-finish', init);
 
