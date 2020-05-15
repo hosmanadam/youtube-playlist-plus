@@ -391,6 +391,26 @@
     })()
 
 
+    // GLOBAL YPP OBJECT //////////////////////////////////////////////////////
+
+    const warnGlobalNameTaken = () => logged(function warnGlobalNameTaken() {
+        warn(
+            `Could not add '${SCRIPT_NAME_SAFE_SHORT}' property to ` +
+            `'window' object: name already taken`
+        );
+    })()
+
+    const addGlobalObject = () => logged(function addGlobalObject() {
+        window[SCRIPT_NAME_SAFE_SHORT] = {debug: DEBUG};
+    })()
+
+    const safeAddGlobalObject = () => logged(function safeAddGlobalObject() {
+        window[SCRIPT_NAME_SAFE_SHORT]
+        && warnGlobalNameTaken()
+        || addGlobalObject();
+    })()
+
+
     // MAIN ///////////////////////////////////////////////////////////////////
 
     const init = () => logged(function init() {
@@ -398,15 +418,7 @@
         || onOldPlaylistPage() && addRemoveButtonIfNotPresent();
     })()
 
-    const safeAddYppToWindow = () => logged(function safeAddGlobalYppToWindow() {
-        if (window.ypp) {
-            warn("Could not add 'ypp' property to 'window' object: name already taken");
-        } else {
-            window.ypp = {debug: DEBUG};
-        }
-    })()
-
-    safeAddYppToWindow();
+    safeAddGlobalObject();
     window.addEventListener('load', init);
     window.addEventListener('yt-navigate-finish', init);
 
