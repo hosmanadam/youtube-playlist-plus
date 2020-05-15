@@ -68,22 +68,24 @@
 
     // LOGGING ////////////////////////////////////////////////////////////////
 
-    const log = (msg) => {
-        console.log(`[${SCRIPT_NAME_SAFE}] INFO - ${msg}`);
-    }
+    const LOG = {
+        info: (msg) => {
+            console.info(`[${SCRIPT_NAME_SAFE}] INFO - ${msg}`);
+        },
 
-    const warn = (msg) => {
-        console.warn(`[${SCRIPT_NAME_SAFE}] WARNING - ${msg}`);
-    }
-
-    const err = (ex) => {
-        console.error(`[${SCRIPT_NAME_SAFE}] ERROR - ${ex}`);
+        warn: (msg) => {
+            console.warn(`[${SCRIPT_NAME_SAFE}] WARNING - ${msg}`);
+        },
+    
+        error: (ex) => {
+            console.error(`[${SCRIPT_NAME_SAFE}] ERROR - ${ex}`);
+        }
     }
 
     const callWithLogging = (fun, args) => {
-        log(`calling: ${fun.name}(${args.join(', ')})`);
+        LOG.info(`calling: ${fun.name}(${args.join(', ')})`);
         let result = fun(...args);
-        log(`${fun.name} returned: ${result}`);
+        LOG.info(`${fun.name} returned: ${result}`);
         return result;
     }
 
@@ -91,7 +93,7 @@
         try {
             return callWithLogging(fun, args);
         } catch (ex) {
-            err(ex);
+            LOG.error(ex);
         }
     }
 
@@ -394,7 +396,7 @@
     // GLOBAL YPP OBJECT //////////////////////////////////////////////////////
 
     const warnGlobalNameTaken = () => logged(function warnGlobalNameTaken() {
-        warn(
+        LOG.warn(
             `Could not add '${SCRIPT_NAME_SAFE_SHORT}' property to ` +
             `'window' object: name already taken`
         );
