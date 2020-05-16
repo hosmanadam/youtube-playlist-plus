@@ -70,7 +70,7 @@
 
 
     // GLOBAL OBJECT //////////////////////////////////////////////////////////
-    // Not logged since logging uses the global object which may not exist yet
+    // Not logged() since logging decorator depends on global object
 
     /** Encapsulates runtime console access to script options */
     const defaultGlobalObject = {
@@ -115,8 +115,8 @@
             console.warn(`[${SCRIPT_NAME_SAFE}] WARNING - ${msg}`);
         },
 
-        error: (ex) => {
-            console.error(`[${SCRIPT_NAME_SAFE}] ERROR - ${ex}`);
+        error: (msg) => {
+            console.error(`[${SCRIPT_NAME_SAFE}] ERROR - ${msg}`);
         }
     }
 
@@ -135,6 +135,7 @@
         }
     }
 
+    /** Return function decorated with before-after logging */
     const logged = (fun) => {
         return (...args) => {
             if (getGlobalObject().debug) {
@@ -428,6 +429,7 @@
         return onPlaylistPage() && !oldLayoutParamPresent();
     })()
 
+
     // INIT ///////////////////////////////////////////////////////////////////
 
     const init = () => logged(function init() {
@@ -440,9 +442,13 @@
         window.addEventListener('yt-navigate-finish', init);
     })()
 
+    const logInitFail = () => {
+        LOG.error('Could not initialize');
+    }
+
 
     // MAIN ///////////////////////////////////////////////////////////////////
 
-    safeAddGlobalObject() && addInitEventListeners();
+    safeAddGlobalObject() ? addInitEventListeners() : logInitFail();
 
 })();
