@@ -1,6 +1,6 @@
 // ==UserScript==
 // @name         YouTube Playlist+
-// @version      0.1.0
+// @version      0.2.0
 // @description  Extends YouTube's playlist interface with features it should've had already.
 // @author       Adam Hosman
 // @license      MIT
