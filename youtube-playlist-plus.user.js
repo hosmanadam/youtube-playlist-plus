@@ -191,11 +191,7 @@
     })()
 
     const loadAllVideosAndGetToWork = () => logged(function loadAllVideosAndGetToWork() {
-        if (didConfirmLoadMore()) {
-            doLoadAllVideosAndGetToWork();
-        } else {
-            logCancellation();
-        }
+        didConfirmLoadMore() && doLoadAllVideosAndGetToWork();
     })()
 
     const getVideoCount = () => logged(function getVideoCount() {
@@ -220,7 +216,6 @@
 
     const performBatchRemove = (nVideosToRemove) => logged(function performBatchRemove(nVideosToRemove) {
         buttonsClicked = 0;
-        logRemoval(nVideosToRemove);
         scheduleClicks(nVideosToRemove);
         scheduleSuccessNotifications();
     })(nVideosToRemove)
@@ -229,8 +224,6 @@
         let nVideosToRemove = countVideosToRemove();
         if (didConfirmBatchRemove(nVideosToRemove)) {
             performBatchRemove(nVideosToRemove);
-        } else {
-            logCancellation();
         }
     })()
 
@@ -280,7 +273,6 @@
     const notifySuccessIfDone = () => logged(function notifySuccessIfDone() {
         if (isRemovalDone()) {
             alertSuccess();
-            logSuccess();
         } else {
             setTimeout(notifySuccessIfDone, 500);
         }
@@ -311,24 +303,6 @@
             `to proceed, or do anything else to cancel.`
         );
     })(nVideosToRemove)
-
-    const logRemoval = (nVideosToRemove) => logged(function logRemoval(nVideosToRemove) {
-        console.log(
-            `${SCRIPT_NAME} is removing ${nVideosToRemove} videos...`
-        );
-    })(nVideosToRemove)
-
-    const logCancellation = () => logged(function logCancellation() {
-        console.log(
-            `${SCRIPT_NAME} didn't remove any videos.`
-        );
-    })()
-
-    const logSuccess = () => logged(function logSuccess() {
-        console.log(
-            `${SCRIPT_NAME} clicked ${buttonsClicked} remove buttons.`
-        );
-    })()
 
 
     // BUTTON STUFF ///////////////////////////////////////////////////////////
