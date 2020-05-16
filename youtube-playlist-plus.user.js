@@ -17,9 +17,10 @@
 
 
     // OPTIONS ////////////////////////////////////////////////////////////////
+    // Default values for initializing global object
 
-    const DEBUG = false; // Set to 'true' to permanently enable console logging
-    const CLICKS_PER_SECOND = 5; // Experiment with faster speeds if you want
+    const DEBUG = false; // Set to 'true' to enable console logging
+    const CLICKS_PER_SECOND = 5; // Experiment with other speeds if you want
     const KEEP_THE_LAST = 0; // Set this number to keep the last N videos
 
 
@@ -66,6 +67,41 @@
     `;
 
 
+    // GLOBAL OBJECT //////////////////////////////////////////////////////////
+    // Not logged since logging uses the global object which may not exist yet
+
+    /** Encapsulates runtime console access to script options */
+    const defaultGlobalObject = {
+        debug: DEBUG,
+        clicksPerSecond: CLICKS_PER_SECOND,
+        keepTheLast: KEEP_THE_LAST
+    }
+
+    const warnGlobalNameTaken = (name) => {
+        LOG.warn(
+            `Could not add '${name}' property to 'window' object: ` +
+            `name already taken`
+        );
+    }
+
+    const addGlobalObject = (key, value) => {
+        window[key] = value;
+    }
+
+    const safeAddGlobalObject = () => {
+        if (window[SCRIPT_NAME_SAFE_SHORT]) {
+            warnGlobalNameTaken(SCRIPT_NAME_SAFE_SHORT);
+        } else {
+            addGlobalObject(SCRIPT_NAME_SAFE_SHORT, defaultGlobalObject);
+            return true;
+        }
+    }
+
+    const getGlobalObject = () => {
+        return window[SCRIPT_NAME_SAFE_SHORT];
+    }
+
+
     // LOGGING ////////////////////////////////////////////////////////////////
 
     const LOG = {
@@ -76,7 +112,7 @@
         warn: (msg) => {
             console.warn(`[${SCRIPT_NAME_SAFE}] WARNING - ${msg}`);
         },
-    
+
         error: (ex) => {
             console.error(`[${SCRIPT_NAME_SAFE}] ERROR - ${ex}`);
         }
@@ -99,7 +135,7 @@
 
     const logged = (fun) => {
         return (...args) => {
-            if (window.ypp && window.ypp.debug) {
+            if (getGlobalObject().debug) {
                 return tryCallWithLogging(fun, args);
             } else {
                 return fun(...args);
@@ -169,7 +205,7 @@
 
     const countVideosToRemove = () => logged(function countVideosToRemove() {
         return Math.max(
-            getVideoCount() - KEEP_THE_LAST,
+            getVideoCount() - getGlobalObject().keepTheLast,
             0
         );
     })()
@@ -216,7 +252,7 @@
 
     const scheduleClicks = (stop) => logged(function scheduleClicks(stop) {
         let buttons = selectRemoveButtons();
-        let msPerClick = 1000 / CLICKS_PER_SECOND;
+        let msPerClick = 1000 / getGlobalObject().clicksPerSecond;
         for (let i = 0; i < stop; i++) {
             scheduleClick(buttons, i, msPerClick);
         }
@@ -248,7 +284,7 @@
     })()
 
     const isRemovalDone = () => logged(function isRemovalDone() {
-        return (getVideoCount() <= KEEP_THE_LAST);
+        return (getVideoCount() <= getGlobalObject().keepTheLast);
     })()
 
     const linkToOldLayout = () => logged(function linkToOldLayout() {
@@ -263,7 +299,7 @@
     })()
 
     const promptRemovalConfirmation = (nVideosToRemove) => logged(function promptRemovalConfirmation(nVideosToRemove) {
-        let totalDuration = nVideosToRemove / CLICKS_PER_SECOND;
+        let totalDuration = nVideosToRemove / getGlobalObject().clicksPerSecond;
         return prompt(
             `${SCRIPT_NAME} is about to remove ${nVideosToRemove} ` +
             `videos from your playlist. The whole thing should take about ` +
@@ -392,34 +428,21 @@
         return onPlaylistPage() && !oldLayoutParamPresent();
     })()
 
-
-    // GLOBAL OBJECT //////////////////////////////////////////////////////////
-
-    const warnGlobalNameTaken = (name) => logged(function warnGlobalNameTaken() {
-        LOG.warn(
-            `Could not add '${name}' property to 'window' object: ` +
-            `name already taken`
-        );
-    })()
-
-    const addGlobalObject = (key, value) => logged(function addGlobalObject(key, value) {
-        window[key] = value;
-    })(key, value)
-
-    const safeAddGlobalObject = (key, value) => logged(function safeAddGlobalObject(key, value) {
-        window[key] && warnGlobalNameTaken(key) || addGlobalObject(key, value);
-    })(key, value)
-
-
-    // MAIN ///////////////////////////////////////////////////////////////////
+    // INIT ///////////////////////////////////////////////////////////////////
 
     const init = () => logged(function init() {
         onNewPlaylistPage() && addOrUpdateRedirectButton()
         || onOldPlaylistPage() && addRemoveButtonIfNotPresent();
     })()
 
-    safeAddGlobalObject(SCRIPT_NAME_SAFE_SHORT, {debug: DEBUG});
-    window.addEventListener('load', init);
-    window.addEventListener('yt-navigate-finish', init);
+    const addInitEventListeners = () => logged(function addInitEventListeners() {
+        window.addEventListener('load', init);
+        window.addEventListener('yt-navigate-finish', init);
+    })()
+
+
+    // MAIN ///////////////////////////////////////////////////////////////////
+
+    safeAddGlobalObject() && addInitEventListeners();
 
 })();
