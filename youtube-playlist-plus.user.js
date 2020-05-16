@@ -66,6 +66,8 @@
         yt-uix-button-size-default
     `;
 
+    const REGEX_PLAYLIST_URL = /https:\/\/www\.youtube\.com\/playlist\?list=.*/
+
 
     // GLOBAL OBJECT //////////////////////////////////////////////////////////
     // Not logged since logging uses the global object which may not exist yet
@@ -415,9 +417,7 @@
 
     const onPlaylistPage = () => logged(function onPlaylistPage() {
         let currentUrl = window.location.href;
-        return currentUrl.match(
-            /https:\/\/www\.youtube\.com\/playlist\?list=.*/
-        );
+        return REGEX_PLAYLIST_URL.test(currentUrl);
     })()
 
     const onOldPlaylistPage = () => logged(function onOldPlaylistPage() {
