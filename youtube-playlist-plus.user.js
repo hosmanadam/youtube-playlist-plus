@@ -31,49 +31,46 @@
     const SCRIPT_NAME_SAFE = 'youtube-playlist-plus';
     const SCRIPT_NAME_SAFE_SHORT = 'ypp';
 
-    const ID_REDIRECT_BUTTON = `${SCRIPT_NAME_SAFE_SHORT}` +
-        `-redirect-button`;
-    const ID_BATCH_REMOVE_BUTTON = `${SCRIPT_NAME_SAFE_SHORT}` +
-        `-batch-remove-button`;
+    const ID_REDIRECT_BUTTON =
+        `${SCRIPT_NAME_SAFE_SHORT}-redirect-button`;
+    const ID_BATCH_REMOVE_BUTTON =
+        `${SCRIPT_NAME_SAFE_SHORT}-batch-remove-button`;
 
-    const QUERY_PARAM_OLD_PAGE = 'disable_polymer=true';
-
-    const NAME_BATCH_REMOVE_BUTTON = 'Batch remove videos';
     const NAME_REDIRECT_BUTTON = 'Go to old layout';
+    const NAME_BATCH_REMOVE_BUTTON = 'Batch remove videos';
 
-    const TOOLTIP_REMOVE_BUTTON =
-        `Clicks all 'Remove' buttons for you when you're too lazy or just ` +
-        `have too many of them.\n` +
-        `- Added by ${SCRIPT_NAME}`
-    ;
     const TOOLTIP_REDIRECT_BUTTON =
         `Takes you to an older version of this page that has more ` +
         `controls, including our '${NAME_BATCH_REMOVE_BUTTON}' button for ` +
         `cleaning up enormous playlists.\n` +
-        `- Added by ${SCRIPT_NAME}`
-    ;
+        `- Added by ${SCRIPT_NAME}`;
+    const TOOLTIP_BATCH_REMOVE_BUTTON =
+        `Clicks all 'Remove' buttons for you when you're too lazy or just ` +
+        `have too many of them.\n` +
+        `- Added by ${SCRIPT_NAME}`;
+
+    const QUERY_PARAM_OLD_PAGE = 'disable_polymer=true';
 
     const STYLE_NEW_PLAYLIST_PAGE_TEXT = `
         color: #606060;
         font-size: 1.4rem;
         font-weight: 400;
         lint-height: 2.1rem;
-        cursor: default;  /* Avoid glitch on mouse enter */
-    `;
+        cursor: default;  /* Avoid glitch on mouse enter */`;
     const CLASS_OLD_PLAYLIST_PAGE_BUTTON = `
         yt-uix-button
         yt-uix-button-default
-        yt-uix-button-size-default
-    `;
+        yt-uix-button-size-default`;
 
-    const REGEX_PLAYLIST_URL = /https:\/\/www\.youtube\.com\/playlist\?list=.*/
+    const REGEX_PLAYLIST_URL =
+        /https:\/\/www\.youtube\.com\/playlist\?list=.*/;
 
 
-    // GLOBAL OBJECT //////////////////////////////////////////////////////////
-    // Not logged() since logging decorator depends on global object
+    // GLOBAL CONFIG //////////////////////////////////////////////////////////
+    // Not logged() since logging decorator depends on global config
 
     /** Encapsulates runtime console access to script options */
-    const defaultGlobalObject = {
+    const defaultGlobalConfig = {
         debug: DEBUG,
         clicksPerSecond: CLICKS_PER_SECOND,
         keepTheLast: KEEP_THE_LAST
@@ -86,20 +83,20 @@
         );
     }
 
-    const addGlobalObject = (key, value) => {
+    const addGlobal = (key, value) => {
         window[key] = value;
+        return true;
     }
 
-    const safeAddGlobalObject = () => {
+    const safeAddGlobalConfig = () => {
         if (window[SCRIPT_NAME_SAFE_SHORT]) {
             warnGlobalNameTaken(SCRIPT_NAME_SAFE_SHORT);
         } else {
-            addGlobalObject(SCRIPT_NAME_SAFE_SHORT, defaultGlobalObject);
-            return true;
+            return addGlobal(SCRIPT_NAME_SAFE_SHORT, defaultGlobalConfig);
         }
     }
 
-    const getGlobalObject = () => {
+    const getConfig = () => {
         return window[SCRIPT_NAME_SAFE_SHORT];
     }
 
@@ -138,7 +135,7 @@
     /** Return function decorated with before-after logging */
     const logged = (fun) => {
         return (...args) => {
-            if (getGlobalObject().debug) {
+            if (getConfig().debug) {
                 return tryCallWithLogging(fun, args);
             } else {
                 return fun(...args);
@@ -204,7 +201,7 @@
 
     const countVideosToRemove = () => logged(function countVideosToRemove() {
         return Math.max(
-            getVideoCount() - getGlobalObject().keepTheLast,
+            getVideoCount() - getConfig().keepTheLast,
             0
         );
     })()
@@ -248,7 +245,7 @@
 
     const scheduleClicks = (stop) => logged(function scheduleClicks(stop) {
         let buttons = selectRemoveButtons();
-        let msPerClick = 1000 / getGlobalObject().clicksPerSecond;
+        let msPerClick = 1000 / getConfig().clicksPerSecond;
         for (let i = 0; i < stop; i++) {
             scheduleClick(buttons, i, msPerClick);
         }
@@ -279,7 +276,7 @@
     })()
 
     const isRemovalDone = () => logged(function isRemovalDone() {
-        return (getVideoCount() <= getGlobalObject().keepTheLast);
+        return (getVideoCount() <= getConfig().keepTheLast);
     })()
 
     const linkToOldLayout = () => logged(function linkToOldLayout() {
@@ -294,7 +291,7 @@
     })()
 
     const promptRemovalConfirmation = (nVideosToRemove) => logged(function promptRemovalConfirmation(nVideosToRemove) {
-        let totalDuration = nVideosToRemove / getGlobalObject().clicksPerSecond;
+        let totalDuration = nVideosToRemove / getConfig().clicksPerSecond;
         return prompt(
             `${SCRIPT_NAME} is about to remove ${nVideosToRemove} ` +
             `videos from your playlist. The whole thing should take about ` +
@@ -355,7 +352,7 @@
     const createBatchRemoveButton = () => logged(function createBatchRemoveButton() {
         let button = document.createElement('button');
         button.setAttribute('class', CLASS_OLD_PLAYLIST_PAGE_BUTTON);
-        button.setAttribute('title', TOOLTIP_REMOVE_BUTTON);
+        button.setAttribute('title', TOOLTIP_BATCH_REMOVE_BUTTON);
         button.setAttribute('type', 'button');
         button.setAttribute('id', ID_BATCH_REMOVE_BUTTON);
         button.addEventListener('click', getToWork);
@@ -423,6 +420,6 @@
 
     // MAIN ///////////////////////////////////////////////////////////////////
 
-    safeAddGlobalObject() ? addInitEventListeners() : logInitFail();
+    safeAddGlobalConfig() ? addInitEventListeners() : logInitFail();
 
 })();
