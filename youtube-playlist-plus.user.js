@@ -20,7 +20,6 @@
     // Default values for initializing global object
 
     const DEBUG = false; // Set to 'true' to enable console logging
-    const CLICKS_PER_SECOND = 5; // Experiment with other speeds if you want
     const KEEP_THE_LAST = 0; // Set this number to keep the last N videos
 
 
@@ -72,7 +71,6 @@
     /** Encapsulates runtime console access to script options */
     const defaultGlobalConfig = {
         debug: DEBUG,
-        clicksPerSecond: CLICKS_PER_SECOND,
         keepTheLast: KEEP_THE_LAST
     }
 
@@ -207,14 +205,49 @@
     })()
 
 
+    // MUTATION OBSERVER //////////////////////////////////////////////////////
+
+    const selectPlaylist = () => logged(function selectPlaylist() {
+        return document.querySelector('.yt-card > .branded-page-v2-body');
+    })()
+
+    const isPlaylistContents = (element) => logged(function isPlaylistContents(element) {
+        return element.id === 'pl-load-more-destination';
+    })(element)
+
+    const mutationCallback = (mutations) => logged(function mutationCallback(mutations) {
+        mutations
+            .filter(m => isPlaylistContents(m.target))
+            .forEach(performNextRemove);
+    })(mutations)
+
+    const observePlaylistChanges = () => logged(function observePlaylistChanges() {
+        new MutationObserver(mutationCallback).observe(
+            selectPlaylist(),
+            { childList: true, subtree: true }
+        );
+    })()
+
+
     // REMOVE SCRIPT //////////////////////////////////////////////////////////
 
+    let removeButtonQueue;
     let buttonsClicked;
 
+    const performNextRemove = () => logged(function performNextRemove() {
+        let button = removeButtonQueue.pop()
+        if (button) {
+            button.click();
+            buttonsClicked++;
+        }
+    })()
+
     const performBatchRemove = (nVideosToRemove) => logged(function performBatchRemove(nVideosToRemove) {
-        buttonsClicked = 0;
-        scheduleClicks(nVideosToRemove);
-        scheduleSuccessNotifications();
+        buttonsClicked = 0;        
+        removeButtonQueue = Array.from(selectRemoveButtons()).reverse();
+        observePlaylistChanges();
+        performNextRemove(); // Start domino effect
+        scheduleSuccessNotification();
     })(nVideosToRemove)
 
     const prepareAndPerformBatchRemove = () => logged(function prepareAndPerformBatchRemove() {
@@ -243,27 +276,7 @@
         return (answer && answer.trim() === "YES");
     })(nVideosToRemove)
 
-    const scheduleClicks = (stop) => logged(function scheduleClicks(stop) {
-        let buttons = selectRemoveButtons();
-        let msPerClick = 1000 / getConfig().clicksPerSecond;
-        for (let i = 0; i < stop; i++) {
-            scheduleClick(buttons, i, msPerClick);
-        }
-    })(stop)
-
-    const scheduleClick = (buttons, i, msPerClick) => logged(function scheduleClick(buttons, i, msPerClick) {
-        setTimeout(
-            () => clickAndIncrement(buttons, i),
-            msPerClick * i
-        );
-    })(buttons, i, msPerClick)
-
-    const clickAndIncrement = (buttons, i) => logged(function clickAndIncrement(buttons, i) {
-        buttons[i].click();
-        buttonsClicked++;
-    })(buttons, i)
-
-    const scheduleSuccessNotifications = () => logged(function scheduleSuccessNotifications() {
+    const scheduleSuccessNotification = () => logged(function scheduleSuccessNotification() {
         setTimeout(notifySuccessIfDone, 500);
     })()
 
@@ -284,20 +297,15 @@
     })()
 
     const alertSuccess = () => logged(function alertSuccess() {
-        alert(
-            `${SCRIPT_NAME} clicked ${buttonsClicked} remove buttons ` +
-            `for you.`
-        );
+        alert(`${SCRIPT_NAME} clicked ${buttonsClicked} remove buttons for you.`);
     })()
 
     const promptRemovalConfirmation = (nVideosToRemove) => logged(function promptRemovalConfirmation(nVideosToRemove) {
-        let totalDuration = nVideosToRemove / getConfig().clicksPerSecond;
         return prompt(
-            `${SCRIPT_NAME} is about to remove ${nVideosToRemove} ` +
-            `videos from your playlist. The whole thing should take about ` +
-            `${totalDuration} seconds, during which you can browse other ` +
-            `tabs if you like. This can not be undone. Enter "YES" ` +
-            `to proceed, or do anything else to cancel.`
+            `${SCRIPT_NAME} is about to remove ${nVideosToRemove} videos from your playlist. ` +
+            `This can take a while, during which you can browse other tabs if you like. ` +
+            `This can not be undone. ` +
+            `Enter "YES" to proceed, or do anything else to cancel.`
         );
     })(nVideosToRemove)
 
