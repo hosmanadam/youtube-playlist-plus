@@ -65,6 +65,10 @@
     const REGEX_PLAYLIST_URL =
         /https:\/\/www\.youtube\.com\/playlist\?list=.*/;
 
+    const PERSISTENT_LOG_LENGTH_LIMIT = 100000;
+
+    const LOCALSTORAGE_KEY_PERSISTENT_LOG = SCRIPT_NAME_CAMEL + 'Log';
+
 
     // GLOBAL CONFIG //////////////////////////////////////////////////////////
     // Not logged() since logging decorator depends on global config
@@ -72,7 +76,8 @@
     /** Encapsulates runtime console access to script options */
     const defaultGlobalConfig = {
         debug: DEBUG,
-        keepTheLast: KEEP_THE_LAST
+        keepTheLast: KEEP_THE_LAST,
+        printLog: () => console.log(getPersistentLog())
     }
 
     const warnGlobalNameTaken = (name) => {
@@ -102,17 +107,51 @@
 
     // LOGGING ////////////////////////////////////////////////////////////////
 
+    const getPersistentLog = () => {
+        return window.localStorage.getItem(LOCALSTORAGE_KEY_PERSISTENT_LOG);
+    };
+
+    const setPersistentLog = (value) => {
+        window.localStorage.setItem(LOCALSTORAGE_KEY_PERSISTENT_LOG, value);
+    };
+
+    const trimPersistentLog = (length) => {
+        const oldValue = getPersistentLog();
+        const newValue = oldValue.slice(oldValue.length - length, oldValue.length);
+        setPersistentLog(newValue);
+    };
+
+    const appendToPersistentLog = (text) => {
+        setPersistentLog(getPersistentLog() + text + '\n');
+    }
+
+    const safeInitPersistentLog = () => {
+        if (getPersistentLog() === null) {
+            setPersistentLog('');
+        } else if (getPersistentLog().length > PERSISTENT_LOG_LENGTH_LIMIT) {
+            trimPersistentLog(PERSISTENT_LOG_LENGTH_LIMIT);
+        }
+        LOG.info('NEW SESSION')
+        return true;
+    }
+
     const LOG = {
         info: (msg) => {
-            console.info(`[${SCRIPT_NAME_KEBAB}] INFO - ${msg}`);
+            let text = `[${SCRIPT_NAME_SAFE_SHORT}] INFO - ${msg}`;
+            getConfig().debug && console.info(text);
+            appendToPersistentLog(text);
         },
 
         warn: (msg) => {
-            console.warn(`[${SCRIPT_NAME_KEBAB}] WARNING - ${msg}`);
+            let text = `[${SCRIPT_NAME_SAFE_SHORT}] WARNING - ${msg}`;
+            getConfig().debug && console.warn(text);
+            appendToPersistentLog(text);
         },
 
         error: (msg) => {
-            console.error(`[${SCRIPT_NAME_KEBAB}] ERROR - ${msg}`);
+            let text = `[${SCRIPT_NAME_SAFE_SHORT}] ERROR - ${msg}`;
+            getConfig().debug && console.error(text);
+            appendToPersistentLog(text);
         }
     }
 
@@ -134,11 +173,7 @@
     /** Return function decorated with before-after logging */
     const logged = (fun) => {
         return (...args) => {
-            if (getConfig().debug) {
-                return tryCallWithLogging(fun, args);
-            } else {
-                return fun(...args);
-            }
+            return tryCallWithLogging(fun, args);
         }
     }
 
@@ -304,6 +339,7 @@
     const promptRemovalConfirmation = (nVideosToRemove) => logged(function promptRemovalConfirmation(nVideosToRemove) {
         return prompt(
             `${SCRIPT_NAME} is about to remove ${nVideosToRemove} videos from your playlist. ` +
+            getConfig().keepTheLast > 0 ? `The last ${getConfig().keepTheLast} videos will be kept. ` : `` +
             `This can take a while, during which you can browse other tabs if you like. ` +
             `This can not be undone. ` +
             `Enter "YES" to proceed, or do anything else to cancel.`
@@ -429,6 +465,8 @@
 
     // MAIN ///////////////////////////////////////////////////////////////////
 
-    safeAddGlobalConfig() ? addInitEventListeners() : logInitFail();
+    safeAddGlobalConfig() && safeInitPersistentLog()
+        ? addInitEventListeners()
+        : logInitFail();
 
 })();
