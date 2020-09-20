@@ -278,7 +278,7 @@
     const mutationCallback = (mutations) => logged(function mutationCallback(mutations) {
         mutations
             .filter(m => isPlaylistContents(m.target))
-            .forEach(performNextRemove);
+            .forEach(performNextRemoveOrAlertSuccess);
     })(mutations)
 
     const observePlaylistChanges = () => logged(function observePlaylistChanges() {
@@ -293,21 +293,30 @@
 
     let removeButtonQueue;
     let buttonsClicked;
+    let buttonsToClick;
+    let didAlertSuccess;
 
-    const performNextRemove = () => logged(function performNextRemove() {
-        let button = removeButtonQueue.pop()
-        if (button) {
-            button.click();
-            buttonsClicked++;
+    const performNextRemoveOrAlertSuccess = () => logged(function performNextRemove() {
+        if (!isRemovalDone()) {
+            let button = removeButtonQueue.pop()
+            if (button) {
+                button.click();
+                buttonsClicked++;
+                buttonsToClick--;
+            }
+        } else if (!didAlertSuccess) {
+            alertSuccess();
+            didAlertSuccess = true;
         }
     })()
 
     const performBatchRemove = (nVideosToRemove) => logged(function performBatchRemove(nVideosToRemove) {
-        buttonsClicked = 0;        
         removeButtonQueue = Array.from(selectRemoveButtons()).reverse();
+        buttonsClicked = 0;
+        buttonsToClick = nVideosToRemove;
+        didAlertSuccess = false;
         observePlaylistChanges();
-        performNextRemove(); // Start domino effect
-        scheduleSuccessNotification();
+        performNextRemoveOrAlertSuccess(); // Start domino effect
     })(nVideosToRemove)
 
     const prepareAndPerformBatchRemove = () => logged(function prepareAndPerformBatchRemove() {
@@ -336,20 +345,8 @@
         return typeof(answer) === 'string';
     })(nVideosToRemove)
 
-    const scheduleSuccessNotification = () => logged(function scheduleSuccessNotification() {
-        setTimeout(notifySuccessIfDone, 500);
-    })()
-
-    const notifySuccessIfDone = () => logged(function notifySuccessIfDone() {
-        if (isRemovalDone()) {
-            alertSuccess();
-        } else {
-            setTimeout(notifySuccessIfDone, 500);
-        }
-    })()
-
     const isRemovalDone = () => logged(function isRemovalDone() {
-        return (getVideoCount() <= OPTIONS.getKeepTheLast());
+        return buttonsToClick <= 0;
     })()
 
     const linkToOldLayout = () => logged(function linkToOldLayout() {
