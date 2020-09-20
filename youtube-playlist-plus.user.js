@@ -137,7 +137,7 @@
 
     const LOG = {
         log(message, loggingLevel, consoleLogger) {
-            let text = `[${SCRIPT_NAME_SAFE_SHORT}] ${loggingLevel} - ${message}`;
+            let text = `[${SCRIPT_NAME_SAFE_SHORT}@${Date.now()}] ${loggingLevel} - ${message}`;
             appendToPersistentLog(text);
             getConfig().debug && consoleLogger(text);
         },
