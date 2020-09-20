@@ -306,7 +306,7 @@
 
     const didConfirmBatchRemove = (nVideosToRemove) => logged(function didConfirmBatchRemove(nVideosToRemove) {
         let answer = promptRemovalConfirmation(nVideosToRemove);
-        return (answer && answer.trim() === "YES");
+        return typeof(answer) === 'string';
     })(nVideosToRemove)
 
     const scheduleSuccessNotification = () => logged(function scheduleSuccessNotification() {
@@ -336,10 +336,10 @@
     const promptRemovalConfirmation = (nVideosToRemove) => logged(function promptRemovalConfirmation(nVideosToRemove) {
         return prompt(
             `${SCRIPT_NAME} is about to remove ${nVideosToRemove} videos from your playlist. ` +
-            getConfig().keepTheLast > 0 ? `The last ${getConfig().keepTheLast} videos will be kept. ` : `` +
+            (getConfig().keepTheLast > 0 ? `The last ${getConfig().keepTheLast} videos will be kept. ` : ``) +
             `This can take a while, during which you can browse other tabs if you like. ` +
-            `This can not be undone. ` +
-            `Enter "YES" to proceed, or do anything else to cancel.`
+            `You can't undo this. ` +
+            `Click 'OK' to proceed, or 'Cancel' to abort.`
         );
     })(nVideosToRemove)
 
