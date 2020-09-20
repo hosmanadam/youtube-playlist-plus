@@ -16,13 +16,6 @@
     'use strict';
 
 
-    // OPTIONS ////////////////////////////////////////////////////////////////
-    // Default values for initializing global object
-
-    const DEBUG = false; // Set to 'true' to enable console logging
-    const KEEP_THE_LAST = 0; // Set this number to keep the last N videos
-
-
     // CONSTANTS //////////////////////////////////////////////////////////////
 
     const SCRIPT_NAME = 'YouTube Playlist+';
@@ -68,16 +61,48 @@
     const PERSISTENT_LOG_LENGTH_LIMIT = 100000;
 
     const LOCALSTORAGE_KEY_PERSISTENT_LOG = SCRIPT_NAME_CAMEL + 'Log';
+    const LOCALSTORAGE_KEY_LIVE_LOG = SCRIPT_NAME_CAMEL + 'LiveLog';
+    const LOCALSTORAGE_KEY_KEEP_THE_LAST = SCRIPT_NAME_CAMEL + 'KeepTheLast';
 
 
-    // GLOBAL CONFIG //////////////////////////////////////////////////////////
-    // Not logged() since logging decorator depends on global config
+    // OPTIONS ////////////////////////////////////////////////////////////////
 
-    /** Encapsulates runtime console access to script options */
-    const defaultGlobalConfig = {
-        debug: DEBUG,
-        keepTheLast: KEEP_THE_LAST,
-        printLog: () => console.log(getPersistentLog())
+    const DEFAULT_OPTIONS = {
+        liveLog: false,
+        keepTheLast: 0,
+    }
+
+    const OPTIONS = {
+        getLiveLog() {
+            const saved = window.localStorage.getItem(LOCALSTORAGE_KEY_LIVE_LOG);
+            return saved ? saved !== 'false' : DEFAULT_OPTIONS.liveLog;
+        },
+        getKeepTheLast() {
+            const saved = window.localStorage.getItem(LOCALSTORAGE_KEY_KEEP_THE_LAST);
+            return saved ? Number(saved) : DEFAULT_OPTIONS.keepTheLast;
+        },
+    }
+
+
+    // CONSOLE INTERFACE //////////////////////////////////////////////////////
+    // Not logged() since logging decorator depends on INTERFACE object
+
+    const INTERFACE = {
+        liveLog(value) {
+            let shouldLiveLog = value !== false; // True when called w/o param
+            window.localStorage.setItem(LOCALSTORAGE_KEY_LIVE_LOG, shouldLiveLog);
+        },
+        keepTheLast(value) {
+            window.localStorage.setItem(LOCALSTORAGE_KEY_KEEP_THE_LAST, value);
+        },
+        log() {
+            console.log(getPersistentLog())
+        },
+        reset() {
+            this.liveLog(DEFAULT_OPTIONS.liveLog);
+            this.keepTheLast(DEFAULT_OPTIONS.keepTheLast);
+            removePersistentLog();
+        },
     }
 
     const warnGlobalNameTaken = (name) => {
@@ -92,16 +117,12 @@
         return true;
     }
 
-    const safeAddGlobalConfig = () => {
+    const safeAddConsoleInterface = () => {
         if (window[SCRIPT_NAME_SAFE_SHORT]) {
             warnGlobalNameTaken(SCRIPT_NAME_SAFE_SHORT);
         } else {
-            return addGlobal(SCRIPT_NAME_SAFE_SHORT, defaultGlobalConfig);
+            return addGlobal(SCRIPT_NAME_SAFE_SHORT, INTERFACE);
         }
-    }
-
-    const getConfig = () => {
-        return window[SCRIPT_NAME_SAFE_SHORT];
     }
 
 
@@ -113,6 +134,10 @@
 
     const setPersistentLog = (value) => {
         window.localStorage.setItem(LOCALSTORAGE_KEY_PERSISTENT_LOG, value);
+    };
+
+    const removePersistentLog = () => {
+        window.localStorage.removeItem(LOCALSTORAGE_KEY_PERSISTENT_LOG);
     };
 
     const trimPersistentLog = (length) => {
@@ -139,7 +164,7 @@
         log(message, loggingLevel, consoleLogger) {
             let text = `[${SCRIPT_NAME_SAFE_SHORT}@${Date.now()}] ${loggingLevel} - ${message}`;
             appendToPersistentLog(text);
-            getConfig().debug && consoleLogger(text);
+            OPTIONS.getLiveLog() && consoleLogger(text);
         },
         info(message) {
             this.log(message, 'INFO', console.info);
@@ -232,7 +257,7 @@
 
     const countVideosToRemove = () => logged(function countVideosToRemove() {
         return Math.max(
-            getVideoCount() - getConfig().keepTheLast,
+            getVideoCount() - OPTIONS.getKeepTheLast(),
             0
         );
     })()
@@ -322,7 +347,7 @@
     })()
 
     const isRemovalDone = () => logged(function isRemovalDone() {
-        return (getVideoCount() <= getConfig().keepTheLast);
+        return (getVideoCount() <= OPTIONS.getKeepTheLast());
     })()
 
     const linkToOldLayout = () => logged(function linkToOldLayout() {
@@ -336,7 +361,7 @@
     const promptRemovalConfirmation = (nVideosToRemove) => logged(function promptRemovalConfirmation(nVideosToRemove) {
         return prompt(
             `${SCRIPT_NAME} is about to remove ${nVideosToRemove} videos from your playlist. ` +
-            (getConfig().keepTheLast > 0 ? `The last ${getConfig().keepTheLast} videos will be kept. ` : ``) +
+            (OPTIONS.getKeepTheLast() > 0 ? `The last ${OPTIONS.getKeepTheLast()} videos will be kept. ` : ``) +
             `This can take a while, during which you can browse other tabs if you like. ` +
             `You can't undo this. ` +
             `Click 'OK' to proceed, or 'Cancel' to abort.`
@@ -462,7 +487,7 @@
 
     // MAIN ///////////////////////////////////////////////////////////////////
 
-    safeAddGlobalConfig() && safeInitPersistentLog()
+    safeAddConsoleInterface() && safeInitPersistentLog()
         ? addInitEventListeners()
         : logInitFail();
 
