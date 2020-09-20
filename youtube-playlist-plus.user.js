@@ -136,23 +136,20 @@
     }
 
     const LOG = {
-        info: (msg) => {
-            let text = `[${SCRIPT_NAME_SAFE_SHORT}] INFO - ${msg}`;
-            getConfig().debug && console.info(text);
+        log(message, loggingLevel, consoleLogger) {
+            let text = `[${SCRIPT_NAME_SAFE_SHORT}] ${loggingLevel} - ${message}`;
             appendToPersistentLog(text);
+            getConfig().debug && consoleLogger(text);
         },
-
-        warn: (msg) => {
-            let text = `[${SCRIPT_NAME_SAFE_SHORT}] WARNING - ${msg}`;
-            getConfig().debug && console.warn(text);
-            appendToPersistentLog(text);
+        info(message) {
+            this.log(message, 'INFO', console.info);
         },
-
-        error: (msg) => {
-            let text = `[${SCRIPT_NAME_SAFE_SHORT}] ERROR - ${msg}`;
-            getConfig().debug && console.error(text);
-            appendToPersistentLog(text);
-        }
+        warn(message) {
+            this.log(message, 'WARN', console.warn);
+        },
+        error(message) {
+            this.log(message, 'ERROR', console.error);
+        },
     }
 
     const callWithLogging = (fun, args) => {
