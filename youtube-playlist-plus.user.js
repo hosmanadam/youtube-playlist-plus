@@ -156,7 +156,8 @@
         } else if (getPersistentLog().length > PERSISTENT_LOG_LENGTH_LIMIT) {
             trimPersistentLog(PERSISTENT_LOG_LENGTH_LIMIT);
         }
-        LOG.info('NEW SESSION')
+        LOG.info('NEW SESSION');
+        LOG.info(navigator.userAgent);
         return true;
     }
 
