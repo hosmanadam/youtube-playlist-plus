@@ -27,7 +27,8 @@
 
     const SCRIPT_NAME = 'YouTube Playlist+';
     const SCRIPT_NAME_SHORT = 'YP+';
-    const SCRIPT_NAME_SAFE = 'youtube-playlist-plus';
+    const SCRIPT_NAME_KEBAB = 'youtube-playlist-plus';
+    const SCRIPT_NAME_CAMEL = 'youtubePlaylistPlus';
     const SCRIPT_NAME_SAFE_SHORT = 'ypp';
 
     const ID_REDIRECT_BUTTON =
@@ -103,15 +104,15 @@
 
     const LOG = {
         info: (msg) => {
-            console.info(`[${SCRIPT_NAME_SAFE}] INFO - ${msg}`);
+            console.info(`[${SCRIPT_NAME_KEBAB}] INFO - ${msg}`);
         },
 
         warn: (msg) => {
-            console.warn(`[${SCRIPT_NAME_SAFE}] WARNING - ${msg}`);
+            console.warn(`[${SCRIPT_NAME_KEBAB}] WARNING - ${msg}`);
         },
 
         error: (msg) => {
-            console.error(`[${SCRIPT_NAME_SAFE}] ERROR - ${msg}`);
+            console.error(`[${SCRIPT_NAME_KEBAB}] ERROR - ${msg}`);
         }
     }
 
