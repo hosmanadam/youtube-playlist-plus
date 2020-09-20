@@ -18,8 +18,9 @@
 
     // CONSTANTS //////////////////////////////////////////////////////////////
 
+    const VERSION = '0.2.0';
+
     const SCRIPT_NAME = 'YouTube Playlist+';
-    const SCRIPT_NAME_SHORT = 'YP+';
     const SCRIPT_NAME_KEBAB = 'youtube-playlist-plus';
     const SCRIPT_NAME_CAMEL = 'youtubePlaylistPlus';
     const SCRIPT_NAME_SAFE_SHORT = 'ypp';
@@ -157,7 +158,7 @@
             trimPersistentLog(PERSISTENT_LOG_LENGTH_LIMIT);
         }
         LOG.info('NEW SESSION');
-        LOG.info(navigator.userAgent);
+        LOG.info(`${navigator.userAgent} ${SCRIPT_NAME_SAFE_SHORT}/${VERSION}`);
         return true;
     }
 
