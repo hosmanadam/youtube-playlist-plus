@@ -61,6 +61,8 @@
 
     const PERSISTENT_LOG_LENGTH_LIMIT = 100000;
 
+    const SUCCESS_ALERT_DELAY = 1000;
+
     const LOCALSTORAGE_KEY_PERSISTENT_LOG = SCRIPT_NAME_CAMEL + 'Log';
     const LOCALSTORAGE_KEY_LIVE_LOG = SCRIPT_NAME_CAMEL + 'LiveLog';
     const LOCALSTORAGE_KEY_KEEP_THE_LAST = SCRIPT_NAME_CAMEL + 'KeepTheLast';
@@ -353,7 +355,10 @@
     })()
 
     const alertSuccess = () => logged(function alertSuccess() {
-        alert(`${SCRIPT_NAME} clicked ${buttonsClicked} remove buttons for you.`);
+        setTimeout(
+            () => alert(`${SCRIPT_NAME} clicked ${buttonsClicked} remove buttons for you.`),
+            SUCCESS_ALERT_DELAY
+        )
     })()
 
     const promptRemovalConfirmation = (nVideosToRemove) => logged(function promptRemovalConfirmation(nVideosToRemove) {
