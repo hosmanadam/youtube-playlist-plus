@@ -1,6 +1,17 @@
 # YouTube Playlist+
 A userscript that extends YouTube's playlist interface with features it should've had already.
 
+## Sad news :cry:
+
+Unfortunately, YouTube has removed the option to use the old playlist layout, which this script depended on for its functionality.
+Therefore, it doesn't work anymore.
+To avoid the loading of a useless script, I released version 0.3.0, which is a no-op, meaning it doesn't do anything.
+All clients should be updated to this version automatically.
+However, I suggest that users shouldn't delete the script entirely because I might update it in the near future to work with the new layout (a non-trivial task).
+If and when I do that, users will automatically get some nice batch-remove functionality again.
+
+<!-- 
+
 ## Features
 - Adds '**Go to old layout**' link to new playlist pages  
   - *Old layout has superior functionality*
@@ -31,3 +42,5 @@ A userscript that extends YouTube's playlist interface with features it should'v
 ## Feature requests
 Do you have an awesome idea for something that should happen on YouTube's playlist interface but doesn't?  
 Let me know by submitting a new feature request using [this template](https://github.com/hosmanadam/youtube-playlist-plus/issues/new?assignees=hosmanadam&labels=enhancement&template=feature_request.md&title=).
+
+-->
